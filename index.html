@@ -1,0 +1,229 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1f4e5f"><title>法律速查</title><style>
+:root{--bg:#f4f2ee;--ink:#1f2328;--mut:#5f6670;--line:#d9d5cc;--acc:#1f4e5f;--accs:#e3eef1;--ok:#2c6b3f;--oks:#e3f1e6;--w:#8a5a00;--ws:#fbf0d9;--r:#a8321f;--rs:#f8e6e2;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#16181b;--ink:#e8e6e1;--mut:#a3a8ae;--line:#33373d;--acc:#7fb4c6;--accs:#1d3640;--ok:#7cc493;--oks:#1d3326;--w:#e6b45c;--ws:#3a2e16;--r:#ef8a76;--rs:#3d211b;--card:#1f2226}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:12px 16px}header h1{margin:0;font-size:18px}header small{opacity:.85}
+@media (prefers-color-scheme:dark){header{background:#1d3640;color:var(--ink)}}
+#app{max-width:720px;margin:0 auto;padding:12px 12px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:16px;color:var(--acc)}.card h3{margin:14px 0 6px;font-size:15px;border-left:4px solid var(--acc);padding-left:8px}
+input,select{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);min-height:44px}
+.types{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.types span{padding:4px 10px;border-radius:14px;font-size:13px;border:1px solid var(--line)}
+.types .on{background:var(--acc);color:#fff;border-color:var(--acc)}.types .off{color:var(--mut)}.types small{margin-left:4px;font-size:11px}
+.clist{max-height:46vh;overflow:auto;margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+.cg{font-size:12px;color:var(--mut);margin:10px 0 4px;font-weight:600}
+.cb{display:inline-block;margin:0 6px 6px 0;padding:8px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;min-height:40px}
+.cb.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.seg button{flex:1;border:none;background:var(--card);color:var(--ink);font:inherit;padding:10px;min-height:44px}.seg button.on{background:var(--acc);color:#fff}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dotted var(--line)}.chk input{width:22px;height:22px;min-height:0;margin-top:2px;flex-shrink:0}
+.chk small,.row small{display:block;color:var(--mut);font-size:13px}
+.loc{margin-bottom:10px}.loc label{display:block;font-size:14px;color:var(--mut);margin-bottom:4px}.loc label small{font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.two select:only-child{grid-column:1/-1}
+.row{padding:8px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:10px}.tag.g{background:var(--oks);color:var(--ok)}.tag.y{background:var(--ws);color:var(--w)}.tag.r{background:var(--rs);color:var(--r)}
+.hint{font-size:13px;color:var(--mut);background:var(--accs);border-radius:8px;padding:6px 10px;margin:6px 0}
+.muted{color:var(--mut);font-size:14px}
+footer{font-size:12px;color:var(--mut);padding:8px 4px;line-height:1.6}
+</style></head><body><header><h1>法律速查</h1><small>請求權基礎・時效・管轄・程序｜第一期：民事</small></header><main id="app"></main><script>/* ===================== 資料：時效、管轄、法院 ===================== */
+/* 時效（n＝數值，u＝y年／m月；long＝另一較長期間說明；ex＝除斥期間；none＝不適用消滅時效） */
+const LIM={
+ g15:{t:'一般請求權 15 年',law:'民法第125條',n:15,u:'y',start:'請求權可行使時'},
+ p5:{t:'定期給付各期 5 年',law:'民法第126條',n:5,u:'y',start:'各期給付屆期時'},
+ c127_1:{t:'旅店、飲食店等費用 2 年',law:'民法第127條第1款',n:2,u:'y',start:'請求權可行使時'},
+ c127_3:{t:'以租賃動產為營業者之租價 2 年',law:'民法第127條第3款',n:2,u:'y',start:'請求權可行使時'},
+ c127_4:{t:'醫生、藥師、看護生之診費、報酬 2 年',law:'民法第127條第4款',n:2,u:'y',start:'請求權可行使時'},
+ c127_5:{t:'律師、會計師、公證人之報酬 2 年',law:'民法第127條第5款',n:2,u:'y',start:'請求權可行使時'},
+ c127_7:{t:'技師、承攬人之報酬 2 年',law:'民法第127條第7款',n:2,u:'y',start:'請求權可行使時（通常為工作完成交付或驗收時）'},
+ c127_8:{t:'商人、製造人、手工業人所供給商品之代價 2 年',law:'民法第127條第8款',n:2,u:'y',start:'請求權可行使時'},
+ tort:{t:'侵權行為 2 年（自行為時起逾 10 年亦消滅）',law:'民法第197條第1項',n:2,u:'y',start:'知有損害及賠償義務人時'},
+ sales:{t:'物之瑕疵：通知後 6 個月內解除或請求減少價金（交付後逾 5 年消滅）',law:'民法第365條（除斥期間）',n:6,u:'m',start:'依第356條為瑕疵通知時',ex:1},
+ lease456:{t:'租賃物損害賠償、費用償還 2 年',law:'民法第456條',n:2,u:'y',start:'出租人自受返還時；承租人自租賃關係終止時'},
+ loan473:{t:'使用借貸損害賠償、費用償還 6 個月',law:'民法第473條',n:6,u:'m',start:'貸與人自受返還時；借用人自借貸關係終止時'},
+ work514:{t:'定作人瑕疵修補、減少報酬、損害賠償或解除 1 年',law:'民法第514條第1項',n:1,u:'y',start:'瑕疵發見後'},
+ tour:{t:'旅遊之費用、損害賠償 1 年',law:'民法第514條之12',n:1,u:'y',start:'旅遊終了或應終了時'},
+ dep:{t:'寄託之報酬、費用、損害賠償 1 年',law:'民法第601條之2',n:1,u:'y',start:'寄託關係終止時'},
+ carry:{t:'物品運送之賠償 1 年',law:'民法第623條第1項',n:1,u:'y',start:'運送終了或應終了時'},
+ occ:{t:'占有物返還、妨害除去 1 年',law:'民法第963條',n:1,u:'y',start:'侵奪、妨害或危險發生後'},
+ note3:{t:'本票、匯票對發票人 3 年',law:'票據法第22條第1項',n:3,u:'y',start:'到期日（見票即付者自發票日）'},
+ check1:{t:'支票對發票人 1 年',law:'票據法第22條第1項',n:1,u:'y',start:'發票日'},
+ ex244:{t:'撤銷詐害債權：知有撤銷原因起 1 年（行為時起逾 10 年）',law:'民法第245條（除斥期間）',n:1,u:'y',start:'知有撤銷原因時',ex:1},
+ nsc:{t:'國家賠償 2 年（損害發生時起逾 5 年亦消滅）',law:'國家賠償法第8條第1項',n:2,u:'y',start:'知有損害時'},
+ reg:{t:'已登記不動產之返還、除去妨害請求權，不適用消滅時效',law:'司法院釋字第107號、第164號解釋',n:0,u:'y',none:1},
+ noLim:{t:'形成訴訟，無消滅時效問題（分割請求權得隨時行使）',law:'民法第823條第1項',n:0,u:'y',none:1},
+ exe:{t:'須於強制執行程序終結前提起',law:'強制執行法第14條、第15條',n:0,u:'y',none:1},
+ forged:{t:'主張偽造、變造：裁定送達後 20 日內起訴（始得停止執行）',law:'非訟事件法第195條第1項',n:20,u:'d',start:'本票裁定送達時'}
+};
+/* 管轄依據 */
+const JUR={
+ def:{t:'被告住所地（法人為主事務所、營業所所在地）',law:'民事訴訟法第1條、第2條',loc:'def'},
+ perf:{t:'約定之債務履行地（因契約涉訟，且契約定有履行地）',law:'民事訴訟法第12條',loc:'perf'},
+ tort:{t:'侵權行為地',law:'民事訴訟法第15條第1項',loc:'act'},
+ reX:{t:'不動產所在地（專屬管轄，不得合意變更）',law:'民事訴訟法第10條第1項、第26條',loc:'re',ex:1},
+ re:{t:'不動產所在地',law:'民事訴訟法第10條第2項',loc:'re'},
+ bill:{t:'票據付款地',law:'民事訴訟法第13條',loc:'bill'},
+ cons:{t:'消費關係發生地（消費訴訟）',law:'消費者保護法第47條',loc:'cons'},
+ exec:{t:'執行法院（專屬）',law:'強制執行法第14條、第15條',loc:'exec',ex:1},
+ note:{t:'為本票裁定之法院（票據付款地法院）',law:'非訟事件法第194條、第195條',loc:'bill',ex:1}
+};
+/* 民事訴訟法第403條第1項（起訴前應經法院調解） */
+const MED={1:'相鄰關係',2:'定不動產界線或設置界標',3:'共有物之管理、處分或分割',4:'區分所有建物或共同部分之管理',5:'增減不動產租金或地租',6:'地上權之期間、範圍、地租',7:'道路交通事故或醫療糾紛',8:'僱傭契約（勞動事件依勞動事件法行勞動調解）',9:'合夥',10:'親屬間財產權爭執'};
+/* 民事訴訟法第427條第2項（不問金額適用簡易程序） */
+const SIMP={1:'建築物或其他工作物定期租賃、定期借貸',2:'僱傭期間一年以下之僱傭契約',3:'旅客與旅館、飲食店、運送人間',4:'請求保護占有',5:'定不動產界線或設置界標',6:'本於票據有所請求',7:'本於合會有所請求',8:'請求利息、紅利、租金、退職金或其他定期給付',9:'動產租賃或使用借貸',11:'本於道路交通事故有所請求'};
+/* 案由：g群組；b請求權基礎［名稱, 條文, 時效key, 管轄keys, 調解款次, 簡易款次, 是否金錢請求］；n備註 */
+const B=(n,law,lim,jur,med,simp,money)=>({n,law,lim,jur,med:med||0,simp:simp||0,money:money!==false});
+const CAUSES=[
+ {g:'契約',n:'清償借款',b:[B('消費借貸返還請求權','民法第478條','g15',['def','perf']),B('約定利息（各期）','民法第478條、第126條','p5',['def','perf'],0,8),B('不當得利（備位）','民法第179條','g15',['def'])],note:['金融機構因消費借貸或信用卡請求者，調解聲請得逕予駁回（民事訴訟法第406條第1項第6款）。','約定利率逾週年16%者，超過部分之約定無效（民法第205條）。']},
+ {g:'契約',n:'給付票款（本票、匯票）',b:[B('票款請求權（對發票人）','票據法第121條、第124條準用','note3',['def','bill'],0,6),B('原因關係之請求（如借款）','民法第478條等','g15',['def','perf'])],note:['因票據發生爭執者，調解聲請得逕予駁回（民事訴訟法第406條第1項第3款）。','亦可先聲請本票裁定（非訟事件法第194條，票據付款地法院）。']},
+ {g:'契約',n:'給付票款（支票）',b:[B('票款請求權（對發票人）','票據法第126條','check1',['def','bill'],0,6),B('原因關係之請求','民法相關規定','g15',['def','perf'])]},
+ {g:'契約',n:'給付買賣價金',b:[B('買賣價金請求權','民法第367條','g15',['def','perf']),B('商人所供給商品之代價','民法第127條第8款','c127_8',['def','perf'])],note:['出賣人為商人、製造人者，適用 2 年短期時效。']},
+ {g:'契約',n:'瑕疵擔保（減少價金、解除契約）',b:[B('解除契約或請求減少價金','民法第359條、第365條','sales',['def','perf']),B('不完全給付損害賠償','民法第227條','g15',['def','perf'])]},
+ {g:'契約',n:'給付工程款（承攬報酬）',b:[B('承攬報酬請求權','民法第490條、第505條','c127_7',['def','perf']),B('追加工程報酬','民法第490條','c127_7',['def','perf']),B('不當得利（備位）','民法第179條','g15',['def'])],note:['公共工程得先申請採購申訴審議委員會履約爭議調解。']},
+ {g:'契約',n:'承攬瑕疵（修補、減少報酬、損害賠償）',b:[B('瑕疵修補、減少報酬、損害賠償或解除','民法第493條至第495條','work514',['def','perf'])]},
+ {g:'契約',n:'給付報酬（委任、律師、醫療）',b:[B('委任報酬（一般）','民法第547條','g15',['def','perf']),B('律師、會計師、公證人之報酬','民法第127條第5款','c127_5',['def','perf']),B('醫生、藥師、看護生之診費、報酬','民法第127條第4款','c127_4',['def','perf'])]},
+ {g:'契約',n:'給付租金',b:[B('租金請求權（各期）','民法第439條、第126條','p5',['def','perf','re'],5,8)],note:['請求增減租金者，起訴前應經法院調解（民事訴訟法第403條第1項第5款）。']},
+ {g:'契約',n:'遷讓房屋（租期屆滿、終止租約）',b:[B('租賃物返還請求權','民法第455條','g15',['def','re'],0,1,false),B('所有物返還（無權占有）','民法第767條第1項前段','reg',['def','re'],0,0,false),B('相當於租金之不當得利','民法第179條','g15',['def','re'],0,8)],note:['建築物定期租賃所生爭執，不問金額適用簡易程序（第427條第2項第1款）；不定期租賃依價額判斷。','訴訟標的價額以房屋起訴時之交易價額（實價登錄）計算，不含土地。']},
+ {g:'契約',n:'返還押租金',b:[B('押租金返還請求權','民法第179條、租賃契約','g15',['def','perf','re'],0,1)]},
+ {g:'契約',n:'租賃物損害賠償、費用償還',b:[B('出租人損害賠償／承租人費用償還','民法第432條、第431條、第456條','lease456',['def','re'],0,1)]},
+ {g:'契約',n:'返還借用物（使用借貸）',b:[B('借用物返還請求權','民法第470條','g15',['def','perf'],0,9,false),B('借用物損害賠償、有益費用償還','民法第473條','loan473',['def','perf'],0,9)]},
+ {g:'契約',n:'給付合會金',b:[B('合會金給付請求權','民法第709條之1以下','g15',['def','perf'],0,7)]},
+ {g:'契約',n:'保證債務（請求保證人清償）',b:[B('保證債務履行請求權','民法第739條','g15',['def','perf'])],note:['保證債務之時效原則上與主債務各自計算；主債務時效完成，保證人得援用主債務人之抗辯（民法第742條）。']},
+ {g:'契約',n:'債務不履行損害賠償、違約金',b:[B('債務不履行損害賠償','民法第226條、第227條、第231條','g15',['def','perf']),B('違約金','民法第250條','g15',['def','perf'])]},
+ {g:'契約',n:'締約上過失損害賠償',b:[B('締約上過失','民法第245條之1','tort',['def'])],note:['時效為 2 年（民法第245條之1第2項），計算方式與侵權行為相同。']},
+ {g:'契約',n:'旅遊糾紛',b:[B('旅遊費用、損害賠償','民法第514條之1以下','tour',['def','perf','cons'])]},
+ {g:'契約',n:'運送糾紛（貨物毀損、遺失）',b:[B('運送物喪失、毀損、遲到之賠償','民法第634條、第623條','carry',['def','perf'],0,3)]},
+ {g:'契約',n:'寄託糾紛',b:[B('寄託物返還、報酬、損害賠償','民法第589條以下、第601條之2','dep',['def','perf'])]},
+ {g:'契約',n:'消費糾紛（定型化契約、退費）',b:[B('契約上請求（退費、違約金）','民法、消費者保護法','g15',['def','perf','cons']),B('商品或服務責任損害賠償','消費者保護法第7條','tort',['def','tort','cons'])],note:['小額事件，企業經營者以定型化約款約定履行地或合意管轄者，不適用第12條、第24條（民事訴訟法第436條之9）。']},
+ {g:'契約',n:'居間報酬、服務費',b:[B('居間報酬請求權','民法第568條','g15',['def','perf'])]},
+ {g:'契約',n:'履行和解契約、協議',b:[B('和解契約履行請求權','民法第736條','g15',['def','perf'])]},
+ {g:'侵權',n:'侵權行為損害賠償（一般）',b:[B('一般侵權行為','民法第184條','tort',['def','tort']),B('非財產上損害（慰撫金）','民法第195條','tort',['def','tort']),B('不當得利（時效完成後仍得請求返還所受利益）','民法第197條第2項','g15',['def'])]},
+ {g:'侵權',n:'交通事故損害賠償',b:[B('侵權行為（駕駛人）','民法第184條、第191條之2','tort',['def','tort'],7,11),B('僱用人連帶責任','民法第188條','tort',['def','tort'],7,11),B('慰撫金','民法第195條','tort',['def','tort'],7,11)],note:['已受領之強制汽車責任保險給付，視為損害賠償金額之一部分，得予扣除（強制汽車責任保險法第32條）。','亦可於刑事過失傷害案件提起附帶民事訴訟。']},
+ {g:'侵權',n:'醫療糾紛',b:[B('侵權行為','民法第184條、第188條','tort',['def','tort'],7),B('醫療契約債務不履行','民法第227條、第227條之1','g15',['def','perf'],7)],note:['醫療事故另有醫療事故預防及爭議處理法之調解規定，請一併確認。']},
+ {g:'侵權',n:'名譽、隱私、性影像侵害',b:[B('人格權侵害損害賠償','民法第184條、第195條','tort',['def','tort']),B('除去或防止侵害','民法第18條','g15',['def','tort'],0,0,false)]},
+ {g:'侵權',n:'動物、工作物、商品致損',b:[B('動物占有人責任','民法第190條','tort',['def','tort']),B('工作物所有人責任','民法第191條','tort',['def','tort']),B('商品製造人責任','民法第191條之1','tort',['def','tort'])]},
+ {g:'侵權',n:'國家賠償',b:[B('公務員不法侵害','國家賠償法第2條','nsc',['def','tort']),B('公共設施設置或管理欠缺','國家賠償法第3條','nsc',['def','tort'])],note:['起訴前應先以書面向賠償義務機關請求（國家賠償法第10條）。','以機關為被告者，由該機關所在地之法院管轄（民事訴訟法第2條第1項）。']},
+ {g:'不當得利',n:'返還不當得利',b:[B('不當得利返還請求權','民法第179條','g15',['def'])]},
+ {g:'不當得利',n:'返還借名登記財產',b:[B('借名契約終止後之返還請求權','民法第541條、第179條','g15',['def','re'],0,0,false)],note:['時效自借名契約終止時起算。']},
+ {g:'物權',n:'拆屋還地、返還土地（無權占有）',b:[B('所有物返還、除去妨害','民法第767條第1項','reg',['def','re'],1,0,false),B('相當於租金之不當得利','民法第179條','g15',['def','re'],0,8)]},
+ {g:'物權',n:'分割共有物',b:[B('共有物分割請求權','民法第823條、第824條','noLim',['reX'],3,0,false)]},
+ {g:'物權',n:'共有物管理、使用',b:[B('共有物管理、使用之爭執','民法第820條、第821條','g15',['def','re'],3,0,false)]},
+ {g:'物權',n:'所有權移轉登記（買賣）',b:[B('移轉登記請求權','民法第348條','g15',['reX'],0,0,false)],note:['因不動產物權涉訟，專屬不動產所在地法院管轄。']},
+ {g:'物權',n:'塗銷抵押權、所有權登記',b:[B('塗銷登記（除去妨害）','民法第767條第1項中段','reg',['reX'],0,0,false)]},
+ {g:'物權',n:'袋地通行權',b:[B('通行權','民法第787條','noLim',['reX'],1,0,false)]},
+ {g:'物權',n:'界址糾紛',b:[B('確定界址','民法第823條、民事訴訟法第427條第2項第5款','noLim',['reX'],2,5,false)]},
+ {g:'物權',n:'相鄰關係（漏水、排水、越界）',b:[B('相鄰關係','民法第774條以下','g15',['def','re'],1,0,false),B('侵權行為損害賠償','民法第184條','tort',['def','tort','re'],1)]},
+ {g:'物權',n:'公寓大廈管理費、區分所有爭議',b:[B('管理費（各期）','公寓大廈管理條例第21條、民法第126條','p5',['def','re'],4,8)]},
+ {g:'物權',n:'占有物返還（占有之訴）',b:[B('占有人物上請求權','民法第962條','occ',['def','re'],0,4,false)]},
+ {g:'執行',n:'債務人異議之訴',b:[B('債務人異議之訴','強制執行法第14條','exe',['exec'],0,0,false)]},
+ {g:'執行',n:'第三人異議之訴',b:[B('第三人異議之訴','強制執行法第15條','exe',['exec'],0,0,false)]},
+ {g:'執行',n:'確認本票債權不存在',b:[B('主張本票偽造、變造','非訟事件法第195條第1項','forged',['note'],0,6,false),B('主張本票債權不存在（其他事由）','民事訴訟法第247條','g15',['def','bill'],0,6,false)]},
+ {g:'執行',n:'撤銷詐害債權',b:[B('撤銷詐害行為','民法第244條','ex244',['def','re'],0,0,false)]}
+];
+/* ===================== 全台地方法院管轄區域 ===================== */
+const COURT_FULL=n=>(/金門|連江/.test(n)?'福建'+n+'地方法院':'臺灣'+n+'地方法院');
+const SPLIT={
+ '臺北市':{'臺北':['中正區','松山區','信義區','文山區','大安區','萬華區','中山區'],'士林':['士林區','北投區','大同區','內湖區','南港區']},
+ '新北市':{'臺北':['新店區','烏來區','深坑區','石碇區','坪林區'],'士林':['汐止區','淡水區','八里區','三芝區','石門區'],'基隆':['瑞芳區','貢寮區','雙溪區','平溪區','金山區','萬里區'],'新北':['板橋區','中和區','永和區','土城區','三峽區','鶯歌區','樹林區','三重區','新莊區','蘆洲區','五股區','泰山區','林口區']},
+ '高雄市':{'橋頭':['橋頭區','左營區','楠梓區','大樹區','鳥松區','仁武區','大社區','岡山區','燕巢區','永安區','彌陀區','梓官區','路竹區','阿蓮區','湖內區','茄萣區','田寮區','旗山區','美濃區','內門區','甲仙區','杉林區','六龜區','那瑪夏區','桃源區','茂林區'],'高雄':['新興區','前金區','苓雅區','鹽埕區','鼓山區','旗津區','前鎮區','三民區','小港區','鳳山區','林園區','大寮區']}
+};
+const WHOLE={'基隆市':'基隆','桃園市':'桃園','新竹市':'新竹','新竹縣':'新竹','苗栗縣':'苗栗','臺中市':'臺中','彰化縣':'彰化','南投縣':'南投','雲林縣':'雲林','嘉義市':'嘉義','嘉義縣':'嘉義','臺南市':'臺南','屏東縣':'屏東','宜蘭縣':'宜蘭','花蓮縣':'花蓮','臺東縣':'臺東','澎湖縣':'澎湖','金門縣':'金門','連江縣':'連江'};
+const COUNTIES=['臺北市','新北市','基隆市','桃園市','新竹市','新竹縣','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義市','嘉義縣','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'];
+const HIGH={'臺灣高等法院':['臺北','士林','新北','桃園','新竹','宜蘭','基隆'],'臺灣高等法院臺中分院':['臺中','苗栗','南投','彰化'],'臺灣高等法院臺南分院':['雲林','嘉義','臺南'],'臺灣高等法院高雄分院':['高雄','橋頭','屏東','澎湖'],'臺灣高等法院花蓮分院':['花蓮','臺東'],'福建高等法院金門分院':['金門','連江']};
+function courtOf(county,dist){if(!county) return ''; if(WHOLE[county]) return WHOLE[county]; const s=SPLIT[county]; if(!s||!dist) return ''; for(const k in s) if(s[k].includes(dist)) return k; return '';}
+function highOf(c){for(const h in HIGH) if(HIGH[h].includes(c)) return h; return '';}
+
+/* ===================== 法律速查（手機版） ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+function parseROC(s){if(!s)return null;s=String(s).trim().replace(/[年月]/g,'/').replace(/日/,'');let m=s.match(/^(\d{2,3})[\/.\-](\d{1,2})[\/.\-](\d{1,2})$/)||s.match(/^(\d{2,3})(\d{2})(\d{2})$/);if(!m)return null;const d=new Date(+m[1]+1911,+m[2]-1,+m[3]);return d.getMonth()===+m[2]-1?d:null;}
+const roc=d=>(d.getFullYear()-1911)+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate());
+function addM(d,n){const x=new Date(d),day=x.getDate();x.setDate(1);x.setMonth(x.getMonth()+n);x.setDate(Math.min(day,new Date(x.getFullYear(),x.getMonth()+1,0).getDate()));return x;}
+function addLim(d,L){if(L.u==='d'){const x=new Date(d);x.setDate(x.getDate()+L.n);return x;} return addM(d,L.u==='m'?L.n:L.n*12);}
+function left(d){const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+const st={cause:-1,role:'原告',bases:{},loc:{},agree:'',agreeC:'',agreeD:'',amt:'',start:{},q:''};
+try{Object.assign(st,JSON.parse(localStorage.getItem('qk')||'{}'));}catch(e){}
+function save(){try{localStorage.setItem('qk',JSON.stringify(st));}catch(e){}}
+const LOCS={def:'對造（被告）住所或主事務所',perf:'約定之債務履行地',act:'侵權行為地',re:'不動產所在地',bill:'票據付款地',cons:'消費關係發生地',exec:'執行法院所在地'};
+function locSel(k){
+ const v=st.loc[k]||{}; const sp=SPLIT[v.c];
+ return `<div class="loc"><label>${LOCS[k]}</label><div class="two"><select data-loc="${k}" data-f="c"><option value="">選擇縣市</option>${COUNTIES.map(c=>`<option ${c===v.c?'selected':''}>${c}</option>`).join('')}</select>
+ ${sp?`<select data-loc="${k}" data-f="d"><option value="">選擇行政區</option>${Object.values(sp).flat().sort().map(d=>`<option ${d===v.d?'selected':''}>${d}</option>`).join('')}</select>`:''}</div></div>`;
+}
+function courtName(k){const v=st.loc[k]||{}; const c=courtOf(v.c,v.d); return c?COURT_FULL(c):'';}
+function render(){
+ const C=CAUSES[st.cause];
+ const groups=[...new Set(CAUSES.map(x=>x.g))];
+ const q=st.q.trim();
+ let h=`<section class="card"><h2>① 案由</h2><div class="types"><span class="on">民事</span><span class="off">家事・勞動<small>第二期</small></span><span class="off">刑事<small>第三期</small></span><span class="off">行政・性平<small>第四期</small></span></div>
+ <input id="q" placeholder="搜尋案由，例如：工程、租、車禍" value="${esc(st.q)}">
+ <div class="clist">${groups.map(g=>{const L=CAUSES.map((x,i)=>[x,i]).filter(([x])=>x.g===g&&(!q||x.n.includes(q)||x.b.some(b=>b.n.includes(q))));return L.length?`<div class="cg">${g}</div>${L.map(([x,i])=>`<button class="cb ${i===st.cause?'on':''}" data-cause="${i}">${esc(x.n)}</button>`).join('')}`:'';}).join('')}</div></section>`;
+ if(C){
+  h+=`<section class="card"><h2>② 我方身分</h2><div class="seg">${['原告','被告'].map(r=>`<button class="${st.role===r?'on':''}" data-role="${r}">${r==='原告'?'原告（起訴方）':'被告（被訴方）'}</button>`).join('')}</div></section>`;
+  h+=`<section class="card"><h2>③ 請求權基礎</h2>${C.b.map((b,i)=>{const on=st.bases[i]!==false&&(st.bases[i]||i===0); return `<label class="chk"><input type="checkbox" data-base="${i}" ${on?'checked':''}><span><b>${esc(b.n)}</b><small>${esc(b.law)}｜時效：${esc(LIM[b.lim].t)}</small></span></label>`;}).join('')}</section>`;
+  const sel=C.b.map((b,i)=>[b,i]).filter(([b,i])=>st.bases[i]!==false&&(st.bases[i]||i===0));
+  const keys=[...new Set(sel.flatMap(([b])=>b.jur))]; const locs=[...new Set(keys.map(k=>JUR[k].loc))];
+  const excl=keys.some(k=>JUR[k].ex);
+  h+=`<section class="card"><h2>④ 地點與條件</h2>${locs.map(locSel).join('')}
+  ${excl?'<div class="hint">本案涉及專屬管轄，不得以合意變更。</div>':`<div class="loc"><label>契約有無合意管轄條款</label><div class="two"><select data-agree="1"><option value="">無／不確定</option><option ${st.agree==='有'?'selected':''}>有</option></select>${st.agree==='有'?`<select data-loc="agree" data-f="c"><option value="">合意之法院縣市</option>${COUNTIES.map(c=>`<option ${c===(st.loc.agree||{}).c?'selected':''}>${c}</option>`).join('')}</select>${SPLIT[(st.loc.agree||{}).c]?`<select data-loc="agree" data-f="d"><option value="">行政區</option>${Object.values(SPLIT[st.loc.agree.c]).flat().sort().map(d=>`<option ${d===st.loc.agree.d?'selected':''}>${d}</option>`).join('')}</select>`:''}`:''}</div></div>`}
+  <div class="loc"><label>請求金額或訴訟標的價額（元）</label><input id="amt" inputmode="numeric" value="${esc(st.amt)}" placeholder="例如 80000"></div>
+  ${sel.filter(([b])=>LIM[b.lim].n).map(([b,i])=>`<div class="loc"><label>「${esc(b.n)}」時效起算日<small>（${esc(LIM[b.lim].start||'')}）</small></label><input data-start="${i}" value="${esc(st.start[i]||'')}" placeholder="民國 115/1/31"></div>`).join('')}</section>`;
+  h+=result(C,sel,keys);
+ }
+ h+=`<footer>本工具依民事訴訟法、民法等現行條文整理，僅供初步判斷；期限未計在途期間及休息日，請以文書記載及最新法令為準。<br>法院管轄區域以臺北市政府公告之各級法院管轄區域一覽表、臺灣橋頭地方檢察署公告為基礎，跨區縣市請再確認。</footer>`;
+ $('#app').innerHTML=h;
+}
+function result(C,sel,keys){
+ let h='<section class="card res"><h2>⑤ 判斷結果</h2>';
+ /* 時效 */
+ h+='<h3>時效</h3>';
+ sel.forEach(([b,i])=>{const L=LIM[b.lim]; const d=parseROC(st.start[i]); let r='';
+  if(L.none) r=`<span class="tag g">${esc(L.t)}</span>`;
+  else if(d){const due=addLim(d,L); const n=left(due); r=`${L.ex?'期間屆滿':'時效完成'}：<b>${roc(due)}</b> <span class="tag ${n<0?'r':n<=60?'y':'g'}">${n<0?(st.role==='被告'?'已完成，可為時效抗辯':'已過 '+(-n)+' 日'):'剩 '+n+' 日'}</span>`;}
+  else r='<span class="muted">輸入起算日即可計算</span>';
+  h+=`<div class="row"><div><b>${esc(b.n)}</b><small>${esc(L.t)}（${esc(L.law)}）</small></div><div>${r}</div></div>`;});
+ /* 管轄 */
+ h+='<h3>管轄法院</h3>';
+ const ex=keys.filter(k=>JUR[k].ex), list=[];
+ (ex.length?ex:keys).forEach(k=>{const J=JUR[k]; const cn=courtName(J.loc); list.push({cn,why:J.t,law:J.law,ex:J.ex});});
+ if(!ex.length&&st.agree==='有'){const a=st.loc.agree||{}; const c=courtOf(a.c,a.d); list.push({cn:c?COURT_FULL(c):'',why:'合意管轄（應以文書證之；屬「排他」或「併存」合意，依約定文字判斷）',law:'民事訴訟法第24條'});}
+ h+=list.map(x=>`<div class="row"><div><b>${x.cn?esc(x.cn):'<span class="muted">（請於④選擇地點）</span>'}</b>${x.ex?' <span class="tag r">專屬</span>':''}<small>${esc(x.why)}｜${esc(x.law)}</small></div></div>`).join('');
+ const uniq=[...new Set(list.map(x=>x.cn).filter(Boolean))];
+ if(uniq.length&&!ex.length) h+=`<div class="hint">數法院俱有管轄權時，原告得任向其中一法院起訴（民事訴訟法第22條）。被告數人住所不同者，各該住所地法院俱有管轄權（第20條）。</div>`;
+ if(uniq.length) h+=`<div class="hint">上訴審：${uniq.map(c=>{const k=c.replace(/^臺灣|^福建|地方法院$/g,''); return esc(c)+' → '+esc(highOf(k)||'');}).join('；')}</div>`;
+ if(st.role==='被告') h+=`<div class="hint">被告如認法院無管轄權，應於本案言詞辯論前抗辯；不抗辯而為本案言詞辯論者，以該法院為有管轄權（民事訴訟法第25條，專屬管轄除外）。</div>`;
+ /* 程序 */
+ h+='<h3>適用程序</h3>';
+ const amt=+String(st.amt).replace(/[^\d]/g,''); const money=sel.some(([b])=>b.money); const simp=sel.map(([b])=>b.simp).filter(Boolean);
+ let proc='', why='';
+ if(simp.length){proc='簡易程序'; why='不問金額適用簡易程序：'+[...new Set(simp)].map(k=>SIMP[k]).join('、')+'（民事訴訟法第427條第2項）';}
+ if(amt){ if(money&&amt<=100000){proc='小額程序'; why='請求給付金錢等，標的金額 10 萬元以下（民事訴訟法第436條之8）';}
+  else if(!proc&&amt<=500000){proc='簡易程序'; why='財產權訴訟，標的金額或價額 50 萬元以下（民事訴訟法第427條第1項）';}
+  else if(!proc){proc='通常程序'; why='標的金額或價額逾 50 萬元';}
+  else if(proc==='簡易程序'&&amt>5000000) why+='；標的逾 500 萬元且案情繁雜者，法院得依聲請改用通常程序（第427條第5項）';}
+ if(!proc) proc='（請輸入金額或價額）';
+ h+=`<div class="row"><div><b>${esc(proc)}</b><small>${esc(why)}</small></div></div>`;
+ if(proc!=='通常程序'&&amt) h+='<div class="hint">小額、簡易事件由地方法院簡易庭審理。</div>';
+ /* 調解 */
+ const med=[...new Set(sel.map(([b])=>b.med).filter(Boolean))];
+ h+='<h3>起訴前調解</h3>';
+ if(med.length) h+=`<div class="row"><div><b>應先經法院調解</b><small>${med.map(k=>esc(MED[k])).join('、')}（民事訴訟法第403條第1項）</small></div></div>`;
+ else if(amt&&amt<=500000) h+='<div class="row"><div><b>應先經法院調解</b><small>其他財產權爭執，標的金額或價額 50 萬元以下（民事訴訟法第403條第1項第11款）</small></div></div>';
+ else h+='<div class="row"><div><span class="muted">非應先行調解事件（仍得聲請調解）</span></div></div>';
+ h+='<div class="hint">當事人逕行起訴者，視為調解之聲請（民事訴訟法第424條）；經鄉鎮市調解委員會調解不成立者，調解聲請得逕予駁回（第406條第1項第2款）。</div>';
+ if(C.note&&C.note.length) h+=`<h3>注意事項</h3>${C.note.map(x=>`<div class="hint">${esc(x)}</div>`).join('')}`;
+ return h+'</section>';
+}
+document.addEventListener('click',e=>{const t=e.target.closest('button'); if(!t) return;
+ if(t.dataset.cause!=null){st.cause=+t.dataset.cause; st.bases={}; st.start={}; save(); render(); setTimeout(()=>{const s=document.querySelectorAll('.card')[1]; if(s) s.scrollIntoView({behavior:'smooth'});},50);}
+ if(t.dataset.role){st.role=t.dataset.role; save(); render();}
+});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.dataset.base!=null){st.bases[t.dataset.base]=t.checked; save(); render();}
+ if(t.dataset.loc){const k=t.dataset.loc; st.loc[k]=st.loc[k]||{}; st.loc[k][t.dataset.f]=t.value; if(t.dataset.f==='c') st.loc[k].d=''; save(); render();}
+ if(t.dataset.agree){st.agree=t.value; save(); render();}
+ if(t.id==='amt'){st.amt=t.value; save(); render();}
+ if(t.dataset.start!=null){const d=parseROC(t.value); st.start[t.dataset.start]=d?roc(d):t.value; save(); render();}
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){st.q=e.target.value; save(); const p=e.target.selectionStart; render(); const q=$('#q'); q.focus(); q.setSelectionRange(p,p);}});
+render();
+</script></body></html>
