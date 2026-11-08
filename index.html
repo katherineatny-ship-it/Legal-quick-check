@@ -154,7 +154,7 @@ function render(){
  const C=CAUSES[st.cause];
  const groups=[...new Set(CAUSES.map(x=>x.g))];
  const q=st.q.trim();
- let h=`<section class="card"><h2>① 案由</h2><div class="types"><span class="on">民事</span><span class="off">家事・勞動<small>第二期</small></span><span class="off">刑事<small>第三期</small></span><span class="off">行政・性平<small>第四期</small></span></div>
+ let h=(typeof INTAKE_MSG!=="undefined"&&INTAKE_MSG?`<section class="card" style="border-left:4px solid #d97706"><b>由諮詢系統帶入</b><div class="hint" style="white-space:pre-line">${esc(INTAKE_MSG)}</div></section>`:'')+`<section class="card"><h2>① 案由</h2><div class="types"><span class="on">民事</span><span class="off">家事・勞動<small>第二期</small></span><span class="off">刑事<small>第三期</small></span><span class="off">行政・性平<small>第四期</small></span></div>
  <input id="q" placeholder="搜尋案由，例如：工程、租、車禍" value="${esc(st.q)}">
  <div class="clist">${groups.map(g=>{const L=CAUSES.map((x,i)=>[x,i]).filter(([x])=>x.g===g&&(!q||x.n.includes(q)||x.b.some(b=>b.n.includes(q))));return L.length?`<div class="cg">${g}</div>${L.map(([x,i])=>`<button class="cb ${i===st.cause?'on':''}" data-cause="${i}">${esc(x.n)}</button>`).join('')}`:'';}).join('')}</div></section>`;
  if(C){
@@ -225,5 +225,26 @@ document.addEventListener('change',e=>{const t=e.target;
  if(t.dataset.start!=null){const d=parseROC(t.value); st.start[t.dataset.start]=d?roc(d):t.value; save(); render();}
 });
 document.addEventListener('input',e=>{if(e.target.id==='q'){st.q=e.target.value; save(); const p=e.target.selectionStart; render(); const q=$('#q'); q.focus(); q.setSelectionRange(p,p);}});
+/* 由諮詢系統帶入參數：?c=案由&r=原告|被告&addr=對造地址 */
+const CMAP={'清償借款':'清償借款','給付票款':'給付票款（本票、匯票）','給付買賣價金':'給付買賣價金','給付工程款（承攬）':'給付工程款（承攬報酬）','給付報酬（委任）':'給付報酬（委任、律師、醫療）','遷讓房屋':'遷讓房屋（租期屆滿、終止租約）','返還租賃物':'遷讓房屋（租期屆滿、終止租約）','給付租金':'給付租金','拆屋還地':'拆屋還地、返還土地（無權占有）','分割共有物':'分割共有物','共有物管理':'共有物管理、使用','所有權移轉登記':'所有權移轉登記（買賣）','塗銷所有權移轉登記':'塗銷抵押權、所有權登記','塗銷抵押權登記':'塗銷抵押權、所有權登記','確認本票債權不存在':'確認本票債權不存在','債務人異議之訴':'債務人異議之訴','第三人異議之訴':'第三人異議之訴','損害賠償（侵權行為）':'侵權行為損害賠償（一般）','損害賠償（交通事故）':'交通事故損害賠償','損害賠償（醫療）':'醫療糾紛','損害賠償（名譽、隱私）':'名譽、隱私、性影像侵害','不當得利':'返還不當得利','返還借名登記財產':'返還借名登記財產','國家賠償':'國家賠償','袋地通行權／鄰地爭議':'袋地通行權','撤銷詐害債權':'撤銷詐害債權','履行契約':'債務不履行損害賠償、違約金','解除契約返還價金':'債務不履行損害賠償、違約金','瑕疵擔保／減少價金':'瑕疵擔保（減少價金、解除契約）','消費爭議':'消費糾紛（定型化契約、退費）','管理費（公寓大廈）':'公寓大廈管理費、區分所有爭議'};
+/* 縣轄市及舊縣名 → 現行縣市 */
+const CITY2C={'臺北縣':'新北市','桃園縣':'桃園市','臺中縣':'臺中市','臺南縣':'臺南市','高雄縣':'高雄市','臺東市':'臺東縣','花蓮市':'花蓮縣','宜蘭市':'宜蘭縣','羅東鎮':'宜蘭縣','屏東市':'屏東縣','苗栗市':'苗栗縣','頭份市':'苗栗縣','彰化市':'彰化縣','員林市':'彰化縣','南投市':'南投縣','斗六市':'雲林縣','太保市':'嘉義縣','朴子市':'嘉義縣','竹北市':'新竹縣','馬公市':'澎湖縣','金城鎮':'金門縣','南竿鄉':'連江縣'};
+function parseAddr(raw){let a=(raw||'').replace(/\s/g,'').replace(/台/g,'臺').replace(/^\d{3,6}/,'').replace(/^(中華民國|臺灣省)/,'');
+ let c=COUNTIES.find(x=>a.startsWith(x))||COUNTIES.find(x=>a.includes(x));
+ if(!c){for(const k in CITY2C) if(a.startsWith(k)||a.includes(k)){c=CITY2C[k]; break;}}
+ if(!c) return null; let d=''; const sp=SPLIT[c];
+ if(sp){const all=Object.values(sp).flat(); const rest=a.slice(Math.max(0,a.indexOf(c)+c.length)); d=all.find(z=>rest.includes(z))||all.find(z=>a.includes(z))||'';
+  if(!d){const m=all.find(z=>{const base=z.replace(/區$/,''); return new RegExp(base+'(市|鎮|鄉)').test(a);}); d=m||'';}} /* 舊制「板橋市」→「板橋區」 */
+ return {c,d};}
+let INTAKE_MSG='';
+(function(){try{const P=new URLSearchParams(location.search); if(!P.toString()) return;
+ st.loc={}; st.agree=''; st.amt=''; st.start={}; st.bases={};
+ const raw=(P.get('c')||'').trim(); const want=CMAP[raw]||raw; const c=want.replace(/（[^）]*）/g,'').trim();
+ let i=CAUSES.findIndex(x=>x.n===want); if(i<0&&c) i=CAUSES.findIndex(x=>x.n.includes(c)||c.includes(x.n.replace(/（[^）]*）/g,'')));
+ if(i>=0) st.cause=i; else {st.cause=-1; if(raw) INTAKE_MSG='諮詢系統案由「'+raw+'」尚未收錄於速查（家事・勞動・刑事・行政將於後續階段加入），請於下方選擇最接近的案由。';}
+ const r=P.get('r'); if(r==='原告'||r==='被告') st.role=r;
+ const loc=parseAddr(P.get('addr')); if(loc) st.loc.def=loc; else if(P.get('addr')) INTAKE_MSG+=(INTAKE_MSG?'\n':'')+'地址「'+P.get('addr')+'」無法辨識縣市，請於④手動選擇。';
+ else INTAKE_MSG+=(INTAKE_MSG?'\n':'')+'未帶入被告住所地址，請於④手動選擇縣市／行政區。';
+ const amt=P.get('amt'); if(amt) st.amt=amt; save(); history.replaceState(null,'',location.pathname);}catch(e){}})();
 render();
 </script></body></html>
